@@ -84,9 +84,25 @@ if (cordova.platformId == "browser") {
     // initialize the Browser
     (function() {
 
-        loadScript("https://apis.google.com/js/platform.js", function() {
-            initBrowser();
+        var plusLoaded = false;
+        var clientPlusLoaded = false;
+
+        loadScript("https://apis.google.com/js/plus.js", function() {
+            plusLoaded = true;
+            onCompleteLoad();
         });
+
+        loadScript("https://apis.google.com/js/client:plus.js", function() {
+            clientPlusLoaded = true;
+            onCompleteLoad();
+        });
+
+        function onCompleteLoad() {
+
+            if (plusLoaded && clientPlusLoaded) {
+                initBrowser();
+            }
+        }
 
     })();
 
