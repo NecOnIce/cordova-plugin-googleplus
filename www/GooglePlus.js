@@ -83,8 +83,28 @@ if (cordova.platformId == "browser") {
 
     // initialize the Browser
     (function() {
-        initBrowser();
+
+        loadScript("https://apis.google.com/js/platform.js", function() {
+            initBrowser();
+        });
+
     })();
+
+    function loadScript(sSrc, onLoad) {
+
+        var oHead = document.head || document.getElementsByTagName("head")[0];
+
+        function loadError (oError) {
+            throw new URIError("The script " + oError.target.src + " is not accessible.");
+        }
+
+        var oScript = document.createElement("script");
+        oScript.type = "text\/javascript";
+        oScript.onerror = loadError;
+        if (onLoad) { oScript.onload = onLoad; }
+        oHead.appendChild(oScript);
+        oScript.src = sSrc;
+    }
 
 } else {
 
