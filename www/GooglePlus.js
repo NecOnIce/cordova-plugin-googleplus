@@ -3,61 +3,110 @@ function GooglePlus() {
 
 if (cordova.platformId == "browser") {
 
-  /**
-   * Checks that GooglePlus is available
-   *
-   * @param callback
-   */
-  GooglePlus.prototype.isAvailable = function (callback) {
+    /**
+     * Checks that GooglePlus is available
+     *
+     * @param callback
+     */
+    GooglePlus.prototype.isAvailable = function (callback) {
 
-      callback(isInitialized);
-  };
+        callback(isInitialized);
+    };
 
-  /**
-   * Logs in the User
-   *
-   * @param options
-   * @param successCallback
-   * @param errorCallback
-   */
-  GooglePlus.prototype.login = function (options, successCallback, errorCallback) {
+    /**
+     * Logs in the User
+     *
+     * @param options
+     * @param successCallback
+     * @param errorCallback
+     */
+    GooglePlus.prototype.login = function (options, successCallback, errorCallback) {
 
-      var GoogleAuth = gapi.auth2.getAuthInstance();
-      GoogleAuth.signIn({
-          fetch_basic_profile: true
-      }).then(successCallback, errorCallback);
-  };
+        var GoogleAuth = gapi.auth2.getAuthInstance();
 
-  /**
-   * Tries to silently login the User
-   *
-   * @param options
-   * @param successCallback
-   * @param errorCallback
-   */
-  GooglePlus.prototype.trySilentLogin = function (options, successCallback, errorCallback) {
+        if (!GoogleAuth) {
+            errorCallback("The GoogleAuth Object was not initialized.");
+        }
 
-  };
+        function onLogin() {
 
-  /**
-   * Logs out the User
-   *
-   * @param successCallback
-   * @param errorCallback
-   */
-  GooglePlus.prototype.logout = function (successCallback, errorCallback) {
+            var GoogleUser = GoogleAuth.currentUser.get();
+            var GoogleProfile = GoogleUser.getBasicProfile();
+            var GoogleAuthResponse = GoogleUser.getAuthResponse();
 
-  };
+            // create Interface specific response Object
+            var response = {};
+            response.email = GoogleProfile.getEmail();
+            response.userId = GoogleProfile.getId();
+            response.displayName = GoogleProfile.getName();
+            response.imageUrl = GoogleProfile.getImageUrl();
+            response.idToken = GoogleAuthResponse.id_token;
+            response.oauthToken = GoogleAuthResponse.access_token;
 
-  /**
-   * Disconnects the User
-   *
-   * @param successCallback
-   * @param errorCallback
-   */
-  GooglePlus.prototype.disconnect = function (successCallback, errorCallback) {
+            // this stuff is not implemented at the Moment because for
+            // this we need additional scopes and an additional Request to Google.
+            response.gender = "";
+            response.givenName = "";
+            response.middleName = "";
+            response.familyName = "";
+            response.birthday = "";
+            response.ageRangeMin = "";
+            response.ageRangeMax = "";
 
-  };
+            successCallback(response);
+        }
+
+        GoogleAuth.signIn({
+            fetch_basic_profile: true
+        }).then(onLogin, errorCallback);
+    };
+
+    /**
+     * Tries to silently login the User
+     *
+     * @param options
+     * @param successCallback
+     * @param errorCallback
+     */
+    GooglePlus.prototype.trySilentLogin = function (options, successCallback, errorCallback) {
+
+        window.plugins.googleplus.login(options, successCallback, errorCallback);
+    };
+
+    /**
+     * Logs out the User
+     *
+     * @param successCallback
+     * @param errorCallback
+     */
+    GooglePlus.prototype.logout = function (successCallback, errorCallback) {
+
+        var GoogleAuth = gapi.auth2.getAuthInstance();
+
+        if (!GoogleAuth) {
+            errorCallback("The GoogleAuth Object was not initialized.");
+        }
+
+        GoogleAuth.signOut().then(successCallback, errorCallback);
+    };
+
+    /**
+     * Disconnects the User
+     *
+     * @param successCallback
+     * @param errorCallback
+     */
+    GooglePlus.prototype.disconnect = function (successCallback, errorCallback) {
+
+        var GoogleAuth = gapi.auth2.getAuthInstance();
+
+        if (!GoogleAuth) {
+            errorCallback("The GoogleAuth Object was not initialized.");
+        }
+
+        GoogleAuth.disconnect();
+        successCallback();
+    };
 
     var isInitialized = false;
 
@@ -73,7 +122,7 @@ if (cordova.platformId == "browser") {
     function initBrowser() {
 
         gapi.auth2.init({
-            client_id: "",
+            client_id: "507443783824-8j35s07cqffdq9mlia7lia4ht5kbb42d.apps.googleusercontent.com",
             fetch_basic_profile: true
         });
 
@@ -84,25 +133,12 @@ if (cordova.platformId == "browser") {
     // initialize the Browser
     (function() {
 
-        var plusLoaded = false;
-        var clientPlusLoaded = false;
-
-        loadScript("https://apis.google.com/js/plus.js", function() {
-            plusLoaded = true;
-            onCompleteLoad();
-        });
-
-        loadScript("https://apis.google.com/js/client:plus.js", function() {
-            clientPlusLoaded = true;
-            onCompleteLoad();
-        });
-
-        function onCompleteLoad() {
-
-            if (plusLoaded && clientPlusLoaded) {
+        loadScript("https://apis.google.com/js/platform.js", function() {
+            //plusLoaded = true;
+            gapi.load('auth2', function() {
                 initBrowser();
-            }
-        }
+            });
+        });
 
     })();
 
@@ -124,67 +160,67 @@ if (cordova.platformId == "browser") {
 
 } else {
 
-  /**
-   * Checks that GooglePlus is available
-   *
-   * @param callback
-   */
-  GooglePlus.prototype.isAvailable = function (callback) {
-    cordova.exec(callback, null, "GooglePlus", "isAvailable", []);
-  };
+    /**
+     * Checks that GooglePlus is available
+     *
+     * @param callback
+     */
+    GooglePlus.prototype.isAvailable = function (callback) {
+        cordova.exec(callback, null, "GooglePlus", "isAvailable", []);
+    };
 
-  /**
-   * Logs in the User
-   *
-   * @param options
-   * @param successCallback
-   * @param errorCallback
-   */
-  GooglePlus.prototype.login = function (options, successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, "GooglePlus", "login", [options]);
-  };
+    /**
+     * Logs in the User
+     *
+     * @param options
+     * @param successCallback
+     * @param errorCallback
+     */
+    GooglePlus.prototype.login = function (options, successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "GooglePlus", "login", [options]);
+    };
 
-  /**
-   * Tries to silently login the User
-   *
-   * @param options
-   * @param successCallback
-   * @param errorCallback
-   */
-  GooglePlus.prototype.trySilentLogin = function (options, successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, "GooglePlus", "trySilentLogin", [options]);
-  };
+    /**
+     * Tries to silently login the User
+     *
+     * @param options
+     * @param successCallback
+     * @param errorCallback
+     */
+    GooglePlus.prototype.trySilentLogin = function (options, successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "GooglePlus", "trySilentLogin", [options]);
+    };
 
-  /**
-   * Logs out the User
-   *
-   * @param successCallback
-   * @param errorCallback
-   */
-  GooglePlus.prototype.logout = function (successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, "GooglePlus", "logout", []);
-  };
+    /**
+     * Logs out the User
+     *
+     * @param successCallback
+     * @param errorCallback
+     */
+    GooglePlus.prototype.logout = function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "GooglePlus", "logout", []);
+    };
 
-  /**
-   * Disconnects the User
-   *
-   * @param successCallback
-   * @param errorCallback
-   */
-  GooglePlus.prototype.disconnect = function (successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, "GooglePlus", "disconnect", []);
-  };
+    /**
+     * Disconnects the User
+     *
+     * @param successCallback
+     * @param errorCallback
+     */
+    GooglePlus.prototype.disconnect = function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "GooglePlus", "disconnect", []);
+    };
 }
 
 
 
 GooglePlus.install = function () {
-  if (!window.plugins) {
-    window.plugins = {};
-  }
+    if (!window.plugins) {
+        window.plugins = {};
+    }
 
-  window.plugins.googleplus = new GooglePlus();
-  return window.plugins.googleplus;
+    window.plugins.googleplus = new GooglePlus();
+    return window.plugins.googleplus;
 };
 
 cordova.addConstructor(GooglePlus.install);
